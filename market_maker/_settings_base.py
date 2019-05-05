@@ -1,6 +1,7 @@
 from os.path import join
 import logging
 
+
 #######################################################################
 # Connection/Auth
 #######################################################################
@@ -8,6 +9,7 @@ import logging
 # API URL.
 # BASE_URL = "https://testnet.bitmex.com/api/v1/"
 BASE_URL = "https://www.bitmex.com/api/v1/"  # Careful, live trading
+
 
 # The BitMEX API requires permanent API keys.
 # Go to https://testnet.bitmex.com/app/apiKeys to fill these out.

@@ -10,7 +10,7 @@ import signal
 
 from market_maker import bitmex
 from market_maker.settings import settings
-from market_maker.utils import log, constants, errors, math
+from market_maker.utils import log, constants, errors, maths
 
 # Used for reloading the bot - saves modified times of key files
 import os
