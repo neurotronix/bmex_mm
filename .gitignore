@@ -5,3 +5,4 @@ dist/
 env
 .idea/
 bmex_mm_fork
+.vscode/
