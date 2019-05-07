@@ -26,7 +26,8 @@ BITMEX_URL = "ws://localhost:3000"
 # BITMEX_URL="wss://www.bitmex.com"
 
 VERB = "GET"
-AUTH_ENDPOINT = "/realtime"  # for the purpose of the API Key check, we're still using /realtime
+# for the purpose of the API Key check, we're still using /realtime
+AUTH_ENDPOINT = "/realtime"
 ENDPOINT = "/realtimemd?transport=websocket&b64=1"
 
 
@@ -42,8 +43,8 @@ def test_with_message():
 
     # Open multiplexed connections.
     for key, secret in KEYS.items():
-        # This is up to you, most use microtime but you may have your own scheme so long as it's increasing
-        # and doesn't repeat.
+        # This is up to you, most use microtime but you may have your
+        # own scheme so long as it's increasing and doesn't repeat.
         nonce = int(round(time.time() * 1000))
         # See signature generation reference at https://www.bitmex.com/app/apiKeys
         signature = bitmex_signature(secret, VERB, AUTH_ENDPOINT, nonce)
@@ -55,27 +56,31 @@ def test_with_message():
         # Format is "type", "id", "topic", "payload"
         # Types are 0 - Message, 1 - Subscribe, 2 - Unsubscribe
         # connID = id()
-        channelName = "userAuth:" + key + ":" + str(nonce) + ":" + signature
+        channelName = f"userAuth:{key}:{str(nonce)}:{signature}"
         request = [1, connID, channelName]
         print(json.dumps(request))
         ws.send(json.dumps(request))
 
-        request = [0, connID, channelName, {'op': 'authKey', 'args': [key, nonce, signature]}]
+        request = [
+            0, connID, channelName,
+            {'op': 'authKey', 'args': [key, nonce, signature]}
+        ]
         print('sending auth request: {}'.format(json.dumps(request)))
         ws.send(json.dumps(request))
         print("Sent Auth request")
         result = ws.recv()
         print('Received {}'.format(result))
 
-        # Send a request that requires authorization on this multiplexed connection.
-        op = {"op":"subscribe", "args":"position"}
+        # Send a request that requires authorization on
+        # this multiplexed connection.
+        op = {'op': 'subscribe', 'args': 'position'}
         request = [0, connID, channelName, op]
         ws.send(json.dumps(request))
         print("Sent subscribe")
         result = ws.recv()
-        print("Received '%s'" % result)
+        print(f"Received '{result}'")
         result = ws.recv()
-        print("Received '%s'" % result)
+        print(f"Received '{result}'")
 
     ws.close()
 
@@ -86,9 +91,10 @@ def random_id():
 
 
 # Generates an API signature.
-# A signature is HMAC_SHA256(secret, verb + path + nonce + data), base64 encoded.
-# Verb must be uppercased, url is relative, nonce must be an increasing 64-bit integer
-# and the data, if present, must be JSON without whitespace between keys.
+# A signature is HMAC_SHA256(secret, verb + path + nonce + data),
+# base64 encoded. Verb must be uppercased, url is relative, nonce must
+# be an increasing 64-bit integer and the data, if present, must be
+# JSON without whitespace between keys.
 def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     """Given an API Secret and data, create a BitMEX-compatible signature."""
     data = ''
@@ -99,11 +105,12 @@ def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     parsedURL = urllib.parse.urlparse(url)
     path = parsedURL.path
     if parsedURL.query:
-        path = path + '?' + parsedURL.query
+        path = f"{path}?{parsedURL.query}"
     # print("Computing HMAC: %s" % verb + path + str(nonce) + data)
     message = (verb + path + str(nonce) + data).encode('utf-8')
 
-    signature = hmac.new(apiSecret.encode('utf-8'), message, digestmod=hashlib.sha256).hexdigest()
+    signature = hmac.new(apiSecret.encode('utf-8'), message,
+                         digestmod=hashlib.sha256).hexdigest()
     return signature
 
 

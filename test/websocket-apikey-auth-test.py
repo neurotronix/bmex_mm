@@ -33,8 +33,8 @@ def main():
 
 
 def test_with_message():
-    # This is up to you, most use microtime but you may have your own scheme so long as it's increasing
-    # and doesn't repeat.
+    # This is up to you, most use microtime but you may have your own
+    # scheme so long as it's increasing and doesn't repeat.
     expires = int(time.time()) + 5
     # See signature generation reference at https://www.bitmex.com/app/apiKeys
     signature = bitmex_signature(API_SECRET, VERB, ENDPOINT, expires)
@@ -65,18 +65,20 @@ def test_with_message():
 
 
 def test_with_querystring():
-    # This is up to you, most use microtime but you may have your own scheme so long as it's increasing
-    # and doesn't repeat.
+    # This is up to you, most use microtime but you may have your own
+    # scheme so long as it's increasing and doesn't repeat.
     expires = int(time.time()) + 5
     # See signature generation reference at https://www.bitmex.com/app/apiKeys
     signature = bitmex_signature(API_SECRET, VERB, ENDPOINT, expires)
 
     # Initial connection - BitMEX sends a welcome message.
-    ws = create_connection(BITMEX_URL + ENDPOINT +
-                           "?api-expires=%s&api-signature=%s&api-key=%s" % (expires, signature, API_KEY))
+    ws = create_connection(
+        BITMEX_URL + ENDPOINT +
+        f"?api-expires={expires}&api-signature={signature}&api-key={API_KEY}"
+    )
     print("Receiving Welcome Message...")
     result = ws.recv()
-    print("Received '%s'" % result)
+    print(f"Received '{result}'")
 
     # Send a request that requires authorization.
     request = {"op": "subscribe", "args": "position"}
@@ -92,8 +94,9 @@ def test_with_querystring():
 
 # Generates an API signature.
 # A signature is HMAC_SHA256(secret, verb + path + nonce + data), hex encoded.
-# Verb must be uppercased, url is relative, nonce must be an increasing 64-bit integer
-# and the data, if present, must be JSON without whitespace between keys.
+# Verb must be uppercased, url is relative, nonce must be an increasing
+# 64-bit integer and the data, if present, must be JSON without
+# whitespace between keys.
 def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     """Given an API Secret key and data, create a BitMEX-compatible signature."""
     data = ''
@@ -109,9 +112,11 @@ def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     message = (verb + path + str(nonce) + data).encode('utf-8')
     print("Signing: %s" % str(message))
 
-    signature = hmac.new(apiSecret.encode('utf-8'), message, digestmod=hashlib.sha256).hexdigest()
+    signature = hmac.new(apiSecret.encode('utf-8'), message,
+                         digestmod=hashlib.sha256).hexdigest()
     print("Signature: %s" % signature)
     return signature
+
 
 if __name__ == "__main__":
     main()
