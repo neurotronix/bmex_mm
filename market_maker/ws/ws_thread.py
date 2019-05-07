@@ -170,8 +170,7 @@ class BitMEXWebsocket():
                                          on_close=self.__on_close,
                                          on_open=self.__on_open,
                                          on_error=self.__on_error,
-                                         header=self.__get_auth()
-                                         )
+                                         header=self.__get_auth())
 
         setup_custom_logger('websocket', log_level=settings.LOG_LEVEL)
         self.wst = threading.Thread(
@@ -296,8 +295,10 @@ class BitMEXWebsocket():
 
                         # Log executions
                         if table == 'order':
-                            is_canceled = ('ordStatus' in updateData
-                                           and updateData['ordStatus'] == 'Canceled')
+                            is_canceled = (
+                                'ordStatus' in updateData and
+                                updateData['ordStatus'] == 'Canceled'
+                            )
                             if 'cumQty' in updateData and not is_canceled:
                                 contExecuted = (updateData['cumQty']
                                                 - item['cumQty'])
@@ -363,7 +364,9 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     # create formatter
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        fmt="%(asctime)s - %(levelname)s - %(module)s - %(message)s"
+    )
     # add formatter to ch
     ch.setFormatter(formatter)
     logger.addHandler(ch)
