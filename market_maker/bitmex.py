@@ -19,12 +19,13 @@ class BitMEX(object):
 
     def __init__(self, base_url=None, symbol=None, apiKey=None, apiSecret=None,
                  orderIDPrefix='mm_bitmex_', shouldWSAuth=True, postOnly=False,
-                 timeout=7):
+                 timeout=7, n_retries=10, retry_delay=2):
         """Init connector."""
         self.logger = logging.getLogger('root')
         self.base_url = base_url
         self.symbol = symbol
         self.postOnly = postOnly
+
         if (apiKey is None):
             raise Exception(
                 "Please set an API key and Secret to get started. " +
@@ -37,6 +38,10 @@ class BitMEX(object):
                 "settings.ORDERID_PREFIX must be at most 13 characters long!"
             )
         self.orderIDPrefix = orderIDPrefix
+
+        self.timeout = timeout
+        self.n_retries = n_retries
+        self.retry_delay = retry_delay
         self.retries = 0  # initialize counter
 
         # Prepare HTTPS session
@@ -50,7 +55,6 @@ class BitMEX(object):
         self.ws = BitMEXWebsocket()
         self.ws.connect(base_url, symbol, shouldAuth=shouldWSAuth)
 
-        self.timeout = timeout
 
     def __del__(self):
         self.exit()
@@ -251,7 +255,7 @@ class BitMEX(object):
         # or you could change the clOrdID (set {"clOrdID": "new", "origClOrdID": "old"})
         # so that an amend can't erroneously be applied twice.
         if max_retries is None:
-            max_retries = 0 if verb in ['POST', 'PUT'] else 3
+            max_retries = 0 if verb in ['POST', 'PUT'] else self.n_retries
 
         # Auth: API Key/Secret
         auth = APIKeyAuthWithExpires(self.apiKey, self.apiSecret)
@@ -263,6 +267,7 @@ class BitMEX(object):
                 exit(1)
 
         def retry():
+            time.sleep(self.retry_delay)
             self.retries += 1
             if self.retries > max_retries:
                 raise Exception(

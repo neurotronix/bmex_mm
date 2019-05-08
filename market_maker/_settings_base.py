@@ -98,7 +98,11 @@ LOOP_INTERVAL = 10
 # Wait times between orders / errors
 API_REST_INTERVAL = 1
 API_ERROR_INTERVAL = 10
-TIMEOUT = 7
+TIMEOUT = 5  # n
+
+# Retry in case API responds with error
+N_RETRIES = 10   # how often should we retry a request
+RETRY_DELAY = 2  # minutes
 
 # If we're doing a dry run, use these numbers for BTC balances
 DRY_BTC = 50

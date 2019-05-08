@@ -37,7 +37,9 @@ class ExchangeInterface:
             apiSecret=settings.API_SECRET,
             orderIDPrefix=settings.ORDERID_PREFIX,
             postOnly=settings.POST_ONLY,
-            timeout=settings.TIMEOUT
+            timeout=settings.TIMEOUT,
+            n_retries=settings.N_RETRIES,
+            retry_delay=settings.RETRY_DELAY
         )
 
     def cancel_order(self, order):
@@ -239,7 +241,7 @@ class OrderManager:
         atexit.register(self.exit)
         signal.signal(signal.SIGTERM, self.exit)
 
-        logger.info("Using symbol %s." % self.exchange.symbol)
+        logger.info(f"Using symbol {self.exchange.symbol}.")
 
         if settings.DRY_RUN:
             logger.info(
@@ -275,7 +277,7 @@ class OrderManager:
         tickLog = self.exchange.get_instrument()['tickLog']
         self.start_XBt = margin["marginBalance"]
 
-        logger.info(f"Current XBT Balance: {XBt_to_XBT(self.start_XBt):.6f}")
+        logger.info(f"Current XBT Balance: {XBt_to_XBT(self.start_XBt):.8f}")
         logger.info(f"Current Contract Position: {self.running_qty}")
 
         if settings.CHECK_POSITION_LIMITS:
@@ -336,8 +338,8 @@ class OrderManager:
         self.start_position_mid = ticker["mid"]
         logger.info(
             f"{self.instrument['symbol']}: " +
-            f"Buy: {ticker['buy']:.{tickLog}}, " +
-            f"Sell: {ticker['sell']:.{tickLog}}"
+            f"Buy: {ticker['buy']:.{tickLog}f}, " +
+            f"Sell: {ticker['sell']:.{tickLog}f}"
         )
         logger.info(
             f"Start Positions: " +
@@ -605,7 +607,7 @@ class OrderManager:
         except errors.AuthenticationError as e:
             logger.info("Was not authenticated; could not cancel orders.")
         except Exception as e:
-            logger.info("Unable to cancel orders: %s" % e)
+            logger.info(f"Unable to cancel orders: {e}")
 
         sys.exit()
 
@@ -657,7 +659,7 @@ def margin(instrument, quantity, price):
 
 
 def run():
-    logger.info('BitMEX Market Maker Version: %s\n' % constants.VERSION)
+    logger.info(f"BitMEX Market Maker (version: {constants.VERSION})\n")
 
     om = OrderManager()
     # Try/except just keeps ctrl-c from printing an ugly stacktrace
