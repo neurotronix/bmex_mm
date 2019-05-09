@@ -176,7 +176,8 @@ class BitMEX(object):
         # Note rethrow; if this fails, we want to catch it and re-tick
         return self._curl_bitmex(path='order/bulk',
                                  postdict={'orders': orders},
-                                 verb='PUT', rethrow_errors=True)
+                                 verb='PUT', rethrow_errors=True,
+                                 max_retries=self.n_retries)
 
     @authentication_required
     def create_bulk_orders(self, orders):
@@ -188,7 +189,7 @@ class BitMEX(object):
                 order['execInst'] = 'ParticipateDoNotInitiate'
         return self._curl_bitmex(path='order/bulk',
                                  postdict={'orders': orders},
-                                 verb='POST')
+                                 verb='POST', max_retries=self.n_retries)
 
     @authentication_required
     def open_orders(self):
