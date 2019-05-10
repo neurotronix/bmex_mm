@@ -8,21 +8,25 @@ import market_maker
 here = dirname(__file__)
 
 
-setup(name='bitmex-market-maker',
-      version=market_maker.__version__,
-      description='Market making bot for BitMEX API',
-      url='https://github.com/BitMEX/sample-market-maker',
-      long_description=open(join(here, 'README.md')).read(),
-      long_description_content_type='text/markdown',
-      author='Samuel Reed',
-      author_email='sam@bitmex.com',
-      install_requires=[
-          'requests',
-          'websocket-client',
-          'future'
-      ],
-      packages=['market_maker', 'market_maker.auth', 'market_maker.utils', 'market_maker.ws'],
-      entry_points={
-          'console_scripts': ['marketmaker = market_maker:run']
-      }
-      )
+setup(
+    name='bitmex-market-maker',
+    version=market_maker.__version__,
+    description='Market making bot for BitMEX API',
+    url='https://github.com/BitMEX/sample-market-maker',
+    long_description=open(join(here, 'README.md')).read(),
+    long_description_content_type='text/markdown',
+    author='Samuel Reed',
+    author_email='sam@bitmex.com',
+    install_requires=[
+        'requests',
+        'websocket-client',
+        'future'
+    ],
+    packages=[
+        'market_maker', 'market_maker.auth',
+        'market_maker.utils', 'market_maker.ws'
+    ],
+    entry_points={
+        'console_scripts': ['marketmaker = market_maker:run']
+    }
+)
