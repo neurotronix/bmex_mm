@@ -107,8 +107,11 @@ RETRY_DELAY = 2  # minutes
 # If we're doing a dry run, use these numbers for BTC balances
 DRY_BTC = 50
 
+# Logging
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
 LOG_LEVEL = logging.INFO
+# If provided, logs errors to file, can contain directories
+LOG_FILE = 'logs/bmex_mm.log'
 
 # To uniquely identify orders placed by this bot, the bot sends a
 # ClOrdID (Client order ID) that is attached to each order so its source

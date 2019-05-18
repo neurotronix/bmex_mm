@@ -4,5 +4,6 @@ dist/
 *.egg-info/
 env
 .idea/
-bmex_mm_fork
 .vscode/
+logs/
+*.log
