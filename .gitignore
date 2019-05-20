@@ -7,3 +7,5 @@ env
 .vscode/
 logs/
 *.log
+*.out
+nohup*

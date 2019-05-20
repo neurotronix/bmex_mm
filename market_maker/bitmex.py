@@ -391,6 +391,7 @@ class BitMEX(object):
                         f"Account out of funds. The message: {error['message']}"
                     )
                     exit_or_throw(Exception('Insufficient Funds'))
+            # TODO: make sure to handle 'Invalid orderID/ordStatus'
 
             # If we haven't returned or re-raised yet, we get here.
             self.logger.error(f"Unhandled Error: {e}: {response.text}")
