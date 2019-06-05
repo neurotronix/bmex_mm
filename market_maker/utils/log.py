@@ -5,8 +5,7 @@ import os
 from pathlib import Path
 
 
-def setup_custom_logger(name, log_file=settings.LOG_FILE,
-                        log_level=settings.LOG_LEVEL):
+def setup_custom_logger(name, log_file=settings.LOG_FILE, log_level=settings.LOG_LEVEL):
     formatter = logging.Formatter(
         fmt="%(asctime)s - %(levelname)s - %(module)s - %(message)s"
     )
@@ -26,16 +25,17 @@ def setup_custom_logger(name, log_file=settings.LOG_FILE,
         # root dir of project
         root = Path(__file__).parent.parent.parent.resolve()
         log_file = os.path.join(root, log_file)
-        
+
         # check if we need to create a sub dir for logs
         log_dir, _ = os.path.split(log_file)
         if log_dir:
             os.makedirs(os.path.join(root, log_dir), exist_ok=True)
-        
-        file_handler = TimedRotatingFileHandler(log_file, when='d',
-                                                interval=1, backupCount=7)
+
+        file_handler = TimedRotatingFileHandler(
+            log_file, when="d", interval=1, backupCount=7
+        )
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.ERROR)
         logger.addHandler(file_handler)
-    
+
     return logger

@@ -73,8 +73,9 @@ def test_with_querystring():
 
     # Initial connection - BitMEX sends a welcome message.
     ws = create_connection(
-        BITMEX_URL + ENDPOINT +
-        f"?api-expires={expires}&api-signature={signature}&api-key={API_KEY}"
+        BITMEX_URL
+        + ENDPOINT
+        + f"?api-expires={expires}&api-signature={signature}&api-key={API_KEY}"
     )
     print("Receiving Welcome Message...")
     result = ws.recv()
@@ -99,21 +100,22 @@ def test_with_querystring():
 # whitespace between keys.
 def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     """Given an API Secret key and data, create a BitMEX-compatible signature."""
-    data = ''
+    data = ""
     if postdict:
         # separators remove spaces from json
         # BitMEX expects signatures from JSON built without spaces
-        data = json.dumps(postdict, separators=(',', ':'))
+        data = json.dumps(postdict, separators=(",", ":"))
     parsedURL = urllib.parse.urlparse(url)
     path = parsedURL.path
     if parsedURL.query:
-        path = path + '?' + parsedURL.query
+        path = path + "?" + parsedURL.query
     # print("Computing HMAC: %s" % verb + path + str(nonce) + data)
-    message = (verb + path + str(nonce) + data).encode('utf-8')
+    message = (verb + path + str(nonce) + data).encode("utf-8")
     print("Signing: %s" % str(message))
 
-    signature = hmac.new(apiSecret.encode('utf-8'), message,
-                         digestmod=hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        apiSecret.encode("utf-8"), message, digestmod=hashlib.sha256
+    ).hexdigest()
     print("Signature: %s" % signature)
     return signature
 

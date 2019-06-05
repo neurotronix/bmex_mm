@@ -13,6 +13,7 @@ from market_maker.utils.log import setup_custom_logger
 from market_maker.utils.maths import toNearest
 from future.utils import iteritems
 from future.standard_library import hooks
+
 with hooks():  # Python 2/3 compat
     from urllib.parse import urlparse, urlunparse
 
@@ -26,20 +27,20 @@ with hooks():  # Python 2/3 compat
 # object. On connect, it synchronously asks for a push of all this data
 # then returns. Right after, the MM can start using its data. It will
 # be updated in realtime, so the MM can poll as often as it wants.
-class BitMEXWebsocket():
+class BitMEXWebsocket:
 
     # Don't grow a table larger than this amount. Helps cap memory usage.
     MAX_TABLE_LEN = 200
 
     def __init__(self):
-        self.logger = logging.getLogger('root')
+        self.logger = logging.getLogger("root")
         self.__reset()
 
     def __del__(self):
         self.exit()
 
     def connect(self, endpoint="", symbol="XBTN15", shouldAuth=True):
-        '''Connect to the websocket and initialize data stores.'''
+        """Connect to the websocket and initialize data stores."""
 
         self.logger.debug("Connecting WebSocket.")
         self.symbol = symbol
@@ -47,15 +48,15 @@ class BitMEXWebsocket():
 
         # We can subscribe right in the connection querystring,
         # so let's build that. Subscribe to all pertinent endpoints
-        subscriptions = [sub + ':' + symbol for sub in ["quote", "trade"]]
+        subscriptions = [sub + ":" + symbol for sub in ["quote", "trade"]]
         subscriptions += ["instrument"]  # We want all of them
         if self.shouldAuth:
-            subscriptions += [sub + ':' + symbol for sub in ["order", "execution"]]
+            subscriptions += [sub + ":" + symbol for sub in ["order", "execution"]]
             subscriptions += ["margin", "position"]
 
         # Get WS URL and connect.
         urlParts = list(urlparse(endpoint))
-        urlParts[0] = urlParts[0].replace('http', 'ws')
+        urlParts[0] = urlParts[0].replace("http", "ws")
         urlParts[2] = "/realtime?subscribe=" + ",".join(subscriptions)
         wsURL = urlunparse(urlParts)
         self.logger.info("Connecting to %s" % wsURL)
@@ -68,80 +69,86 @@ class BitMEXWebsocket():
         self.__wait_for_symbol(symbol)
         if self.shouldAuth:
             self.__wait_for_account()
-        self.logger.info('Got all market data. Starting.')
+        self.logger.info("Got all market data. Starting.")
 
     #
     # Data methods
     #
     def get_instrument(self, symbol):
-        instruments = self.data['instrument']
-        matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
+        instruments = self.data["instrument"]
+        matchingInstruments = [i for i in instruments if i["symbol"] == symbol]
         if len(matchingInstruments) == 0:
-            raise Exception(
-                f"Unable to find instrument or index with symbol: {symbol}"
-            )
+            raise Exception(f"Unable to find instrument or index with symbol: {symbol}")
         instrument = matchingInstruments[0]
         # Turn the 'tickSize' into 'tickLog' for use in rounding
         # http://stackoverflow.com/a/6190291/832202
-        instrument['tickLog'] = (decimal.Decimal(str(instrument['tickSize']))
-                                 .as_tuple().exponent * -1)
+        instrument["tickLog"] = (
+            decimal.Decimal(str(instrument["tickSize"])).as_tuple().exponent * -1
+        )
         return instrument
 
     def get_ticker(self, symbol):
-        '''Return a ticker object. Generated from instrument.'''
+        """Return a ticker object. Generated from instrument."""
 
         instrument = self.get_instrument(symbol)
 
         # If this is an index, we have to get the data from the last trade.
-        if instrument['symbol'][0] == '.':
+        if instrument["symbol"][0] == ".":
             ticker = {}
-            ticker['mid'] = ticker['buy'] = ticker['sell'] = ticker['last'] \
-                = instrument['markPrice']
+            ticker["mid"] = ticker["buy"] = ticker["sell"] = ticker[
+                "last"
+            ] = instrument["markPrice"]
         # Normal instrument
         else:
-            bid = instrument['bidPrice'] or instrument['lastPrice']
-            ask = instrument['askPrice'] or instrument['lastPrice']
+            bid = instrument["bidPrice"] or instrument["lastPrice"]
+            ask = instrument["askPrice"] or instrument["lastPrice"]
             ticker = {
-                "last": instrument['lastPrice'],
+                "last": instrument["lastPrice"],
                 "buy": bid,
                 "sell": ask,
-                "mid": (bid + ask) / 2
+                "mid": (bid + ask) / 2,
             }
 
         # The instrument has a tickSize. Use it to round values.
-        return {k: toNearest(float(v or 0), instrument['tickSize'])
-                for k, v in iteritems(ticker)}
+        return {
+            k: toNearest(float(v or 0), instrument["tickSize"])
+            for k, v in iteritems(ticker)
+        }
 
     def funds(self):
-        return self.data['margin'][0]
+        return self.data["margin"][0]
 
     def market_depth(self, symbol):
         raise NotImplementedError(
-            "orderBook is not subscribed; " +
-            "use askPrice and bidPrice on instrument"
+            "orderBook is not subscribed; " + "use askPrice and bidPrice on instrument"
         )
         # return self.data['orderBook25'][0]
 
     def open_orders(self, clOrdIDPrefix):
-        orders = self.data['order']
+        orders = self.data["order"]
         # Filter to only open orders (leavesQty > 0)
         # and those that we actually placed
         return [
-            o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix)
-            and o['leavesQty'] > 0
+            o
+            for o in orders
+            if str(o["clOrdID"]).startswith(clOrdIDPrefix) and o["leavesQty"] > 0
         ]
 
     def position(self, symbol):
-        positions = self.data['position']
-        pos = [p for p in positions if p['symbol'] == symbol]
+        positions = self.data["position"]
+        pos = [p for p in positions if p["symbol"] == symbol]
         if len(pos) == 0:
             # No position found; stub it
-            return {'avgCostPrice': 0, 'avgEntryPrice': 0,
-                    'currentQty': 0, 'symbol': symbol}
+            return {
+                "avgCostPrice": 0,
+                "avgEntryPrice": 0,
+                "currentQty": 0,
+                "symbol": symbol,
+            }
         return pos[0]
 
     def recent_trades(self):
-        return self.data['trade']
+        return self.data["trade"]
 
     #
     # Lifecycle methods
@@ -160,19 +167,21 @@ class BitMEXWebsocket():
     #
 
     def __connect(self, wsURL):
-        '''Connect to the websocket in a thread.'''
+        """Connect to the websocket in a thread."""
         self.logger.debug("Starting thread")
 
         ssl_defaults = ssl.get_default_verify_paths()
-        sslopt_ca_certs = {'ca_certs': ssl_defaults.cafile}
-        self.ws = websocket.WebSocketApp(wsURL,
-                                         on_message=self.__on_message,
-                                         on_close=self.__on_close,
-                                         on_open=self.__on_open,
-                                         on_error=self.__on_error,
-                                         header=self.__get_auth())
+        sslopt_ca_certs = {"ca_certs": ssl_defaults.cafile}
+        self.ws = websocket.WebSocketApp(
+            wsURL,
+            on_message=self.__on_message,
+            on_close=self.__on_close,
+            on_open=self.__on_open,
+            on_error=self.__on_error,
+            header=self.__get_auth(),
+        )
 
-        setup_custom_logger('websocket', log_level=settings.LOG_LEVEL)
+        setup_custom_logger("websocket", log_level=settings.LOG_LEVEL)
         self.wst = threading.Thread(
             target=lambda: self.ws.run_forever(sslopt=sslopt_ca_certs)
         )
@@ -182,8 +191,11 @@ class BitMEXWebsocket():
 
         # Wait for connect before continuing
         conn_timeout = settings.TIMEOUT
-        while (not self.ws.sock or not self.ws.sock.connected) \
-                and conn_timeout and not self._error:
+        while (
+            (not self.ws.sock or not self.ws.sock.connected)
+            and conn_timeout
+            and not self._error
+        ):
             sleep(1)
             conn_timeout -= 1
 
@@ -193,7 +205,7 @@ class BitMEXWebsocket():
             sys.exit(1)
 
     def __get_auth(self):
-        '''Return auth headers. Will use API Keys if present in settings.'''
+        """Return auth headers. Will use API Keys if present in settings."""
 
         if self.shouldAuth is False:
             return []
@@ -204,50 +216,47 @@ class BitMEXWebsocket():
         nonce = generate_expires()
         return [
             "api-expires: " + str(nonce),
-            "api-signature: " + generate_signature(settings.API_SECRET,
-                                                   'GET', '/realtime',
-                                                   nonce, ''),
-            "api-key:" + settings.API_KEY
+            "api-signature: "
+            + generate_signature(settings.API_SECRET, "GET", "/realtime", nonce, ""),
+            "api-key:" + settings.API_KEY,
         ]
 
     def __wait_for_account(self):
-        '''On subscribe, this data will come down. Wait for it.'''
+        """On subscribe, this data will come down. Wait for it."""
         # Wait for the keys to show up from the ws
-        while not {'margin', 'position', 'order'} <= set(self.data):
+        while not {"margin", "position", "order"} <= set(self.data):
             sleep(0.1)
 
     def __wait_for_symbol(self, symbol):
-        '''On subscribe, this data will come down. Wait for it.'''
-        while not {'instrument', 'trade', 'quote'} <= set(self.data):
+        """On subscribe, this data will come down. Wait for it."""
+        while not {"instrument", "trade", "quote"} <= set(self.data):
             sleep(0.1)
 
     def __send_command(self, command, args):
-        '''Send a raw command.'''
+        """Send a raw command."""
         self.ws.send(json.dumps({"op": command, "args": args or []}))
 
     def __on_message(self, message):
-        '''Handler for parsing WS messages.'''
+        """Handler for parsing WS messages."""
         message = json.loads(message)
         self.logger.debug(json.dumps(message))
 
-        table = message['table'] if 'table' in message else None
-        action = message['action'] if 'action' in message else None
+        table = message["table"] if "table" in message else None
+        action = message["action"] if "action" in message else None
         try:
-            if 'subscribe' in message:
-                if message['success']:
-                    self.logger.debug(
-                        f"Subscribed to {message['subscribe']}."
-                    )
+            if "subscribe" in message:
+                if message["success"]:
+                    self.logger.debug(f"Subscribed to {message['subscribe']}.")
                 else:
                     self.error(
-                        f"Unable to subscribe to {message['request']['args'][0]}. " +
-                        f"Error: '{message['error']}' " +
-                        "Please check and restart."
+                        f"Unable to subscribe to {message['request']['args'][0]}. "
+                        + f"Error: '{message['error']}' "
+                        + "Please check and restart."
                     )
-            elif 'status' in message:
-                if message['status'] == 400:
-                    self.error(message['error'])
-                if message['status'] == 401:
+            elif "status" in message:
+                if message["status"] == 400:
+                    self.error(message["error"])
+                if message["status"] == 401:
                     self.error("API Key incorrect, please check and restart.")
             elif action:
                 if table not in self.data:
@@ -261,69 +270,68 @@ class BitMEXWebsocket():
                 # 'insert'  - new row
                 # 'update'  - update row
                 # 'delete'  - delete row
-                if action == 'partial':
+                if action == "partial":
                     self.logger.debug("%s: partial" % table)
-                    self.data[table] += message['data']
+                    self.data[table] += message["data"]
                     # Keys are communicated on partials to let you know
                     # how to uniquely identify an item. We use it for updates.
-                    self.keys[table] = message['keys']
-                elif action == 'insert':
+                    self.keys[table] = message["keys"]
+                elif action == "insert":
                     self.logger.debug(f"{table}: inserting {message['data']}")
-                    self.data[table] += message['data']
+                    self.data[table] += message["data"]
 
                     # Limit the max length of the table to avoid
                     # excessive memory usage. Don't trim orders because
                     # we'll lose valuable state if we do.
-                    if (table not in ['order', 'orderBookL2']
-                            and len(self.data[table])
-                            > BitMEXWebsocket.MAX_TABLE_LEN):
-                        self.data[table] = (
-                            self.data[table][(BitMEXWebsocket.MAX_TABLE_LEN // 2):]
-                        )
+                    if (
+                        table not in ["order", "orderBookL2"]
+                        and len(self.data[table]) > BitMEXWebsocket.MAX_TABLE_LEN
+                    ):
+                        self.data[table] = self.data[table][
+                            (BitMEXWebsocket.MAX_TABLE_LEN // 2) :
+                        ]
 
-                elif action == 'update':
-                    self.logger.debug(
-                        f"{table}: updating {message['data']}"
-                    )
+                elif action == "update":
+                    self.logger.debug(f"{table}: updating {message['data']}")
                     # Locate the item in the collection and update it.
-                    for updateData in message['data']:
-                        item = findItemByKeys(self.keys[table],
-                                              self.data[table], updateData)
+                    for updateData in message["data"]:
+                        item = findItemByKeys(
+                            self.keys[table], self.data[table], updateData
+                        )
                         if not item:
                             # No item found to update. Could happen before push
                             continue
 
                         # Log executions
-                        if table == 'order':
+                        if table == "order":
                             is_canceled = (
-                                'ordStatus' in updateData and
-                                updateData['ordStatus'] == 'Canceled'
+                                "ordStatus" in updateData
+                                and updateData["ordStatus"] == "Canceled"
                             )
-                            if 'cumQty' in updateData and not is_canceled:
-                                contExecuted = (updateData['cumQty']
-                                                - item['cumQty'])
+                            if "cumQty" in updateData and not is_canceled:
+                                contExecuted = updateData["cumQty"] - item["cumQty"]
                                 if contExecuted > 0:
-                                    instrument = self.get_instrument(item['symbol'])
+                                    instrument = self.get_instrument(item["symbol"])
                                     self.logger.info(
-                                        f"Execution: {item['side']} {contExecuted} " +
-                                        f"Contracts of {item['symbol']} " +
-                                        f"at {item['price']:.{instrument['tickLog']}f}"
+                                        f"Execution: {item['side']} {contExecuted} "
+                                        + f"Contracts of {item['symbol']} "
+                                        + f"at {item['price']:.{instrument['tickLog']}f}"
                                     )
 
                         # Update this item.
                         item.update(updateData)
 
                         # Remove canceled / filled orders
-                        if table == 'order' and item['leavesQty'] <= 0:
+                        if table == "order" and item["leavesQty"] <= 0:
                             self.data[table].remove(item)
 
-                elif action == 'delete':
+                elif action == "delete":
                     self.logger.debug(f"{table}: deleting {message['data']}")
                     # Locate the item in the collection and remove it.
-                    for deleteData in message['data']:
-                        item = findItemByKeys(self.keys[table],
-                                              self.data[table],
-                                              deleteData)
+                    for deleteData in message["data"]:
+                        item = findItemByKeys(
+                            self.keys[table], self.data[table], deleteData
+                        )
                         self.data[table].remove(item)
                 else:
                     raise Exception(f"Unknown action: {action}")
@@ -334,7 +342,7 @@ class BitMEXWebsocket():
         self.logger.debug("Websocket Opened.")
 
     def __on_close(self):
-        self.logger.info('Websocket Closed')
+        self.logger.info("Websocket Closed")
         self.exit()
 
     def __on_error(self, ws, error):
@@ -373,5 +381,5 @@ if __name__ == "__main__":
     ws = BitMEXWebsocket()
     ws.logger = logger
     ws.connect("https://testnet.bitmex.com/api/v1")
-    while(ws.ws.sock.connected):
+    while ws.ws.sock.connected:
         sleep(1)

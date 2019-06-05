@@ -101,7 +101,7 @@ API_ERROR_INTERVAL = 10
 TIMEOUT = 5  # n
 
 # Retry in case API responds with error
-N_RETRIES = 10   # how often should we retry a request
+N_RETRIES = 10  # how often should we retry a request
 RETRY_DELAY = 2  # minutes
 
 # If we're doing a dry run, use these numbers for BTC balances
@@ -111,7 +111,7 @@ DRY_BTC = 50
 # Available levels: logging.(DEBUG|INFO|WARN|ERROR)
 LOG_LEVEL = logging.INFO
 # If provided, logs errors to file, can contain directories
-LOG_FILE = 'logs/bmex_mm.log'
+LOG_FILE = "logs/bmex_mm.log"
 
 # To uniquely identify orders placed by this bot, the bot sends a
 # ClOrdID (Client order ID) that is attached to each order so its source
@@ -124,9 +124,11 @@ LOG_FILE = 'logs/bmex_mm.log'
 ORDERID_PREFIX = "mm_bitmex_"
 
 # If any of these files (and this file) changes, reload the bot.
-WATCHED_FILES = [join('market_maker', 'market_maker.py'),
-                 join('market_maker', 'bitmex.py'),
-                 'settings.py']
+WATCHED_FILES = [
+    join("market_maker", "market_maker.py"),
+    join("market_maker", "bitmex.py"),
+    "settings.py",
+]
 
 
 #######################################################################
@@ -135,4 +137,4 @@ WATCHED_FILES = [join('market_maker', 'market_maker.py'),
 
 # Specify the contracts that you hold.
 # These will be used in portfolio calculations.
-CONTRACTS = ['XBTUSD']
+CONTRACTS = ["XBTUSD"]

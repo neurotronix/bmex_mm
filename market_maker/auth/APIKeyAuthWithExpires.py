@@ -24,10 +24,10 @@ class APIKeyAuthWithExpires(AuthBase):
         # modify and return the request
         # 5s grace period in case of clock skew
         expires = int(round(time.time()) + 5)
-        r.headers['api-expires'] = str(expires)
-        r.headers['api-key'] = self.apiKey
-        r.headers['api-signature'] = generate_signature(self.apiSecret,
-                                                        r.method, r.url,
-                                                        expires, r.body or '')
+        r.headers["api-expires"] = str(expires)
+        r.headers["api-key"] = self.apiKey
+        r.headers["api-signature"] = generate_signature(
+            self.apiSecret, r.method, r.url, expires, r.body or ""
+        )
 
         return r

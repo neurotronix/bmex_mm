@@ -16,9 +16,7 @@ from websocket import create_connection
 ###
 
 # Replace these with your keys.
-KEYS = {
-    "CfwQ4SZ6gM_t6dIy1bCLJylX": "f9XOPLacPCZJ1dvPzN8B6Et7nMEaPGeomMSHk8Cr2zD4NfCY"
-}
+KEYS = {"CfwQ4SZ6gM_t6dIy1bCLJylX": "f9XOPLacPCZJ1dvPzN8B6Et7nMEaPGeomMSHk8Cr2zD4NfCY"}
 
 # Switch these comments to use testnet instead.
 BITMEX_URL = "ws://localhost:3000"
@@ -62,18 +60,20 @@ def test_with_message():
         ws.send(json.dumps(request))
 
         request = [
-            0, connID, channelName,
-            {'op': 'authKey', 'args': [key, nonce, signature]}
+            0,
+            connID,
+            channelName,
+            {"op": "authKey", "args": [key, nonce, signature]},
         ]
-        print('sending auth request: {}'.format(json.dumps(request)))
+        print("sending auth request: {}".format(json.dumps(request)))
         ws.send(json.dumps(request))
         print("Sent Auth request")
         result = ws.recv()
-        print('Received {}'.format(result))
+        print("Received {}".format(result))
 
         # Send a request that requires authorization on
         # this multiplexed connection.
-        op = {'op': 'subscribe', 'args': 'position'}
+        op = {"op": "subscribe", "args": "position"}
         request = [0, connID, channelName, op]
         ws.send(json.dumps(request))
         print("Sent subscribe")
@@ -87,7 +87,7 @@ def test_with_message():
 
 # Generates a random ID.
 def random_id():
-    return codecs.encode(uuid.uuid4().bytes, 'base64').rstrip(b'=\n').decode('utf-8')
+    return codecs.encode(uuid.uuid4().bytes, "base64").rstrip(b"=\n").decode("utf-8")
 
 
 # Generates an API signature.
@@ -97,20 +97,21 @@ def random_id():
 # JSON without whitespace between keys.
 def bitmex_signature(apiSecret, verb, url, nonce, postdict=None):
     """Given an API Secret and data, create a BitMEX-compatible signature."""
-    data = ''
+    data = ""
     if postdict:
         # separators remove spaces from json
         # BitMEX expects signatures from JSON built without spaces
-        data = json.dumps(postdict, separators=(',', ':'))
+        data = json.dumps(postdict, separators=(",", ":"))
     parsedURL = urllib.parse.urlparse(url)
     path = parsedURL.path
     if parsedURL.query:
         path = f"{path}?{parsedURL.query}"
     # print("Computing HMAC: %s" % verb + path + str(nonce) + data)
-    message = (verb + path + str(nonce) + data).encode('utf-8')
+    message = (verb + path + str(nonce) + data).encode("utf-8")
 
-    signature = hmac.new(apiSecret.encode('utf-8'), message,
-                         digestmod=hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        apiSecret.encode("utf-8"), message, digestmod=hashlib.sha256
+    ).hexdigest()
     return signature
 
 

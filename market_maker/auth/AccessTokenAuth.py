@@ -11,6 +11,6 @@ class AccessTokenAuth(AuthBase):
 
     def __call__(self, r):
         """Called when forming a request - generates access token header."""
-        if (self.token):
-            r.headers['access-token'] = self.token
+        if self.token:
+            r.headers["access-token"] = self.token
         return r
